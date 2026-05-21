@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Platform - Home</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <h2>🗳️ VoteHub</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="home.html" class="active">Home</a></li>
+                    <li><a href="#vote">Vote</a></li>
+                    <li><a href="#history">History</a></li>
+                    <li><a href="loging.html" class="logout">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="welcome">
+            <h1>Welcome to VoteHub</h1>
+            <p>Make your voice heard. Create polls, vote, and see results in real-time.</p>
+        </section>
+
+        <section class="options-grid">
+            <!-- Create Vote Pool -->
+            <div class="option-card create-poll">
+                <div class="card-icon">📝</div>
+                <h3>Create Poll</h3>
+                <p>Create a new voting poll with multiple options</p>
+                <button onclick="openCreatePollModal()" class="btn-option">Create New Poll</button>
+            </div>
+
+            <!-- Vote Option -->
+            <div class="option-card vote">
+                <div class="card-icon">✅</div>
+                <h3>Vote</h3>
+                <p>Browse and participate in active polls</p>
+                <button onclick="viewPolls()" class="btn-option">Browse Polls</button>
+            </div>
+
+            <!-- History -->
+            <div class="option-card history">
+                <div class="card-icon">📊</div>
+                <h3>Voting History</h3>
+                <p>View your voting history and poll results</p>
+                <button onclick="viewHistory()" class="btn-option">View History</button>
+            </div>
+
+            <!-- My Polls -->
+            <div class="option-card my-polls">
+                <div class="card-icon">📋</div>
+                <h3>My Polls</h3>
+                <p>Manage and view polls you created</p>
+                <button onclick="viewMyPolls()" class="btn-option">My Polls</button>
+            </div>
+        </section>
+
+        <!-- Active Polls Preview -->
+        <section class="active-polls">
+            <h2>Active Polls</h2>
+            <div class="polls-container" id="pollsContainer">
+                <div class="poll-card">
+                    <h4>What's your favorite programming language?</h4>
+                    <div class="poll-options">
+                        <div class="poll-option">
+                            <span>Python</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 45%"></div>
+                            </div>
+                            <span class="percentage">45%</span>
+                        </div>
+                        <div class="poll-option">
+                            <span>JavaScript</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 35%"></div>
+                            </div>
+                            <span class="percentage">35%</span>
+                        </div>
+                        <div class="poll-option">
+                            <span>Java</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 20%"></div>
+                            </div>
+                            <span class="percentage">20%</span>
+                        </div>
+                    </div>
+                    <button class="btn-vote" onclick="votePoll()">Vote Now</button>
+                </div>
+
+                <div class="poll-card">
+                    <h4>Best time to schedule meetings?</h4>
+                    <div class="poll-options">
+                        <div class="poll-option">
+                            <span>Morning (9-12 AM)</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 60%"></div>
+                            </div>
+                            <span class="percentage">60%</span>
+                        </div>
+                        <div class="poll-option">
+                            <span>Afternoon (1-5 PM)</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 30%"></div>
+                            </div>
+                            <span class="percentage">30%</span>
+                        </div>
+                        <div class="poll-option">
+                            <span>Evening (5-7 PM)</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: 10%"></div>
+                            </div>
+                            <span class="percentage">10%</span>
+                        </div>
+                    </div>
+                    <button class="btn-vote" onclick="votePoll()">Vote Now</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Poll Modal -->
+    <div id="createPollModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create a New Poll</h2>
+                <button class="close-btn" onclick="closeCreatePollModal()">&times;</button>
+            </div>
+            <form id="createPollForm">
+                <div class="form-group">
+                    <label for="pollQuestion">Poll Question</label>
+                    <input type="text" id="pollQuestion" required placeholder="Enter your poll question">
+                </div>
+
+                <div class="form-group">
+                    <label>Poll Options</label>
+                    <div id="optionsContainer">
+                        <input type="text" class="poll-option-input" placeholder="Option 1" required>
+                        <input type="text" class="poll-option-input" placeholder="Option 2" required>
+                    </div>
+                    <button type="button" class="btn-add-option" onclick="addPollOption()">+ Add Option</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="pollDuration">Poll Duration (days)</label>
+                    <input type="number" id="pollDuration" min="1" max="365" value="7" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="allowMultiple">
+                        Allow multiple selections
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Create Poll</button>
+                    <button type="button" class="btn-secondary" onclick="closeCreatePollModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 VoteHub Voting Platform. All rights reserved.</p>
+    </footer>
+
+    <script src="home.js"></script>
+</body>
+</html>

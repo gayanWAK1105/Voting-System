@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote - Voting Platform</title>
+    <link rel="stylesheet" href="vote.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <h2>🗳️ VoteHub</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="vote.html" class="active">Vote</a></li>
+                    <li><a href="#history">History</a></li>
+                    <li><a href="loging.html" class="logout">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="vote-header">
+            <h1>Active Polls</h1>
+            <p>Browse and vote on active polls from our community</p>
+            <div class="filter-section">
+                <input type="text" id="searchInput" placeholder="Search polls..." class="search-box">
+                <select id="categoryFilter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="tech">Technology</option>
+                    <option value="work">Work & Productivity</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="politics">Politics</option>
+                </select>
+                <select id="sortFilter" class="filter-select">
+                    <option value="newest">Newest First</option>
+                    <option value="trending">Most Voted</option>
+                    <option value="ending">Ending Soon</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="polls-section">
+            <div class="polls-grid" id="pollsGrid">
+                <!-- Polls will be loaded here dynamically -->
+            </div>
+        </section>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">📭</div>
+            <h2>No polls found</h2>
+            <p>Try adjusting your search or filters</p>
+        </div>
+    </main>
+
+    <!-- Vote Modal -->
+    <div id="voteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalPollQuestion">Poll Question</h2>
+                <button class="close-btn" onclick="closeVoteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="voteOptionsContainer">
+                    <!-- Vote options will be inserted here -->
+                </div>
+                <div id="pollStats" class="poll-stats">
+                    <span>Total Votes: <strong id="totalVotesCount">0</strong></span>
+                    <span>Expires: <strong id="expiresCount">Soon</strong></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="submitVote()" class="btn-primary">Submit Vote</button>
+                <button onclick="closeVoteModal()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 VoteHub Voting Platform. All rights reserved.</p>
+    </footer>
+
+    <script src="vote.js"></script>
+</body>
+</html>
