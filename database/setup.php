@@ -7,6 +7,7 @@
 
 $host = 'localhost';
 $user = 'root';
+$port = "3306";
 $pass = '';
 
 echo "<h2>Voting System — Database Setup</h2>";
@@ -14,7 +15,7 @@ echo "<hr>";
 
 // Connect to MySQL server (no database selected yet)
 try {
-    $pdo = new PDO("mysql:host=$host", $user, $pass);
+    $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     echo "<p>Connected to MySQL server.</p>";
 } catch (PDOException $e) {
