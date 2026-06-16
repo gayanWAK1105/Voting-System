@@ -1,0 +1,22 @@
+/* ===========================
+   Auth Pages (Login + Register)
+   =========================== */
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-box h1 {
+    margin-bottom: 4px;
+}
+
+.auth-box .text-muted {
+    margin-bottom: 20px;
+}

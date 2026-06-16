@@ -1,0 +1,60 @@
+/* ===========================
+   Dashboard (My Polls Page)
+   =========================== */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 0;
+}
+
+
+/* Polls Table */
+
+.polls-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.polls-table thead {
+    background-color: #F1F5F9;
+}
+
+.polls-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+
+.polls-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.polls-table tr:last-child td {
+    border-bottom: none;
+}
+
+.polls-table td a {
+    color: var(--text);
+    font-weight: bold;
+}
+
+.polls-table td a:hover {
+    color: var(--primary);
+}
