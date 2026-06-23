@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!/[a-zA-Z]/.test(password)) {
                 errors.push('Password must contain at least one letter.');
             }
+            if (!/[A-Z]/.test(password)) {
+                errors.push('Password must contain at least one uppercase letter.');
+            }
             if (!/[^a-zA-Z0-9\s]/.test(password)) {
                 errors.push('Password must contain at least one special character.');
             }
