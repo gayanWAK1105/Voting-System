@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Password is required.';
     } elseif (strlen($password) < 6) {
         $errors[] = 'Password must be at least 6 characters.';
+    } elseif (!preg_match('/[a-zA-Z]/', $password)) {
+        $errors[] = 'Password must contain at least one letter.';
+    } elseif (!preg_match('/[^a-zA-Z0-9\s]/', $password)) {
+        $errors[] = 'Password must contain at least one special character.';
     }
 
     if ($password !== $confirm_password) {
@@ -103,7 +107,7 @@ require_once 'includes/header.php';
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
-                <span class="help-text">Minimum 6 characters.</span>
+                <span class="help-text">Minimum 6 chars, 1 letter, and 1 special character.</span>
             </div>
 
             <div class="form-group">
@@ -119,32 +123,6 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<script>
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    var username = document.getElementById('username').value.trim();
-    var email = document.getElementById('email').value.trim();
-    var password = document.getElementById('password').value;
-    var confirm = document.getElementById('confirm_password').value;
-    var errors = [];
-
-    if (username.length < 3) {
-        errors.push('Username must be at least 3 characters.');
-    }
-    if (email.indexOf('@') === -1) {
-        errors.push('Please enter a valid email.');
-    }
-    if (password.length < 6) {
-        errors.push('Password must be at least 6 characters.');
-    }
-    if (password !== confirm) {
-        errors.push('Passwords do not match.');
-    }
-
-    if (errors.length > 0) {
-        e.preventDefault();
-        alert(errors.join('\n'));
-    }
-});
-</script>
+<script src="assets/js/register-validation.js"></script>
 
 <?php require_once 'includes/footer.php'; ?>
