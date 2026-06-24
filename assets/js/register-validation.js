@@ -1,7 +1,7 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('registerForm');
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             var username = document.getElementById('username').value.trim();
             var email = document.getElementById('email').value.trim();
             var password = document.getElementById('password').value;
@@ -17,13 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (password.length < 6) {
                 errors.push('Password must be at least 6 characters.');
             }
-            if (!/[a-zA-Z]/.test(password)) {
-                errors.push('Password must contain at least one letter.');
-            }
             if (!/[A-Z]/.test(password)) {
                 errors.push('Password must contain at least one uppercase letter.');
             }
-            if (!/[^a-zA-Z0-9\s]/.test(password)) {
+            if (!/[a-z]/.test(password)) {
+                errors.push('Password must contain at least one lowercase letter.');
+            }
+            if (!/[^A-Za-z0-9]/.test(password)) {
                 errors.push('Password must contain at least one special character.');
             }
             if (password !== confirm) {
