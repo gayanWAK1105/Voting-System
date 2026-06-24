@@ -30,9 +30,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 errors.push('Passwords do not match.');
             }
 
+            var errorContainer = document.getElementById('js-errors');
+
             if (errors.length > 0) {
                 e.preventDefault();
-                alert(errors.join('\n'));
+
+                // Hide any server-side error boxes to prevent duplicate boxes
+                var serverErrors = document.querySelectorAll('.auth-box .alert-error:not(#js-errors)');
+                serverErrors.forEach(function (el) {
+                    el.style.display = 'none';
+                });
+
+                if (errorContainer) {
+                    errorContainer.innerHTML = '';
+                    errors.forEach(function (error) {
+                        var p = document.createElement('p');
+                        p.textContent = error;
+                        errorContainer.appendChild(p);
+                    });
+                    errorContainer.style.display = 'block';
+                    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                if (errorContainer) {
+                    errorContainer.style.display = 'none';
+                }
             }
         });
     }

@@ -101,6 +101,8 @@ require_once 'includes/header.php';
             </div>
         <?php endif; ?>
 
+        <div id="js-errors" class="alert alert-error" style="display:none;"></div>
+
         <form method="POST" action="register.php" id="registerForm">
 
             <div class="form-group">
