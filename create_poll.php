@@ -5,6 +5,7 @@ require_once 'includes/functions.php';
 
 require_login();
 
+// define default values for poll creation form
 $errors = [];
 $title = '';
 $description = '';
@@ -30,10 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vote_limit = ($vote_limit_input !== '' && is_numeric($vote_limit_input)) ? (int) $vote_limit_input : null;
     $options = isset($_POST['options']) ? $_POST['options'] : [];
 
-    
+    // check if title is provided and under 255 characters
     if (empty($title)) {
         $errors[] = 'Poll title is required.';
-    } elseif (strlen($title) > 255) {
+    } 
+    elseif (strlen($title) > 255) {
         $errors[] = 'Poll title must be under 255 characters.';
     }
 
@@ -41,15 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Invalid poll type.';
     }
 
-    if (!in_array($access_type, ['public', 'account', 'code'])) {
+    if (!in_array($access_type, ['public', 'code'])) {
         $errors[] = 'Invalid access type.';
     }
-
+    
+    // check if access code is provided when access type is code protected
     if ($access_type === 'code' && empty($access_code)) {
-        $errors[] = 'Access code is required for code-protected polls.';
+        $errors[] = 'Access code is required for code  protected polls.';
     }
 
-    
+    // check if at least 2 options are provided
     if ($poll_type !== 'text') {
         $clean_options = [];
         foreach ($options as $opt) {
@@ -63,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    
     $image_path = null;
     if (isset($_FILES['poll_image']) && $_FILES['poll_image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['poll_image'];
@@ -72,9 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!in_array($file['type'], $allowed)) {
             $errors[] = 'Image must be JPG, PNG, or GIF.';
-        } elseif ($file['size'] > $max_size) {
+        } 
+        elseif ($file['size'] > $max_size) {
             $errors[] = 'Image must be under 2MB.';
-        } else {
+        } 
+        else {
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             $filename = 'poll_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
             $upload_dir = __DIR__ . '/assets/uploads/';
@@ -91,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    
+    // If no errors, insert poll into database
+    // remove any empty options and sanitize them
     if (empty($errors)) {
         $c_user_id = mysqli_real_escape_string($conn, get_current_user_id());
         $c_title = mysqli_real_escape_string($conn, $title);
@@ -112,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_query($conn, $query)) {
             $poll_id = mysqli_insert_id($conn);
 
-            
+            // insert options into poll_options table if poll type is not text
             if ($poll_type !== 'text') {
                 foreach ($clean_options as $option_text) {
                     $c_option_text = mysqli_real_escape_string($conn, $option_text);
@@ -122,8 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             redirect('poll.php?id=' . $poll_id);
-        } else {
-            $errors[] = 'Database error: Failed to create poll.';
+        } 
+        else {
+            $errors[] = 'Database error: Failed to create poll.'. mysqli_error($conn);
         }
     }
 }
@@ -202,8 +208,7 @@ require_once 'includes/header.php';
             <div class="form-group">
                 <label for="access_type">Access Type</label>
                 <select id="access_type" name="access_type">
-                    <option value="public" <?php if ($access_type === 'public') echo 'selected'; ?>>Public Link</option>
-                    <option value="account" <?php if ($access_type === 'account') echo 'selected'; ?>>Account Required</option>
+                    <option value="public" <?php if ($access_type === 'public') echo 'selected'; ?>>Public</option>
                     <option value="code" <?php if ($access_type === 'code') echo 'selected'; ?>>Code Protected</option>
                 </select>
             </div>
