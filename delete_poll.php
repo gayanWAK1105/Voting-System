@@ -3,9 +3,10 @@ require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
+
 require_login();
 
-// Only accept POST
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('my_polls.php');
 }
@@ -17,19 +18,23 @@ if ($poll_id <= 0) {
     redirect('my_polls.php');
 }
 
-// Verify ownership
-$stmt = $pdo->prepare("SELECT creator_id FROM polls WHERE id = ?");
-$stmt->execute([$poll_id]);
-$poll = $stmt->fetch();
 
-if (!$poll || $poll['creator_id'] != $user_id) {
+$c_poll_id = mysqli_real_escape_string($conn, $poll_id);
+$c_user_id = mysqli_real_escape_string($conn, $user_id);
+
+
+$query = "SELECT creator_id FROM polls WHERE id = '$c_poll_id'";
+$result = mysqli_query($conn, $query);
+$poll = mysqli_fetch_assoc($result);
+
+if (!$poll || $poll['creator_id'] != $c_user_id) {
     $_SESSION['dashboard_message'] = 'You do not have permission to delete this poll.';
     redirect('my_polls.php');
 }
 
-// Delete poll (cascading deletes handle options, votes, vote_answers)
-$stmt = $pdo->prepare("DELETE FROM polls WHERE id = ?");
-$stmt->execute([$poll_id]);
+// 3. Poll එක මකාදැමීම (Delete)
+$delete_query = "DELETE FROM polls WHERE id = '$c_poll_id'";
+mysqli_query($conn, $delete_query);
 
 $_SESSION['dashboard_message'] = 'Poll deleted successfully.';
 redirect('my_polls.php');

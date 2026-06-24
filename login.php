@@ -3,9 +3,7 @@ require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
-start_session_if_needed();
 
-// If already logged in, go to homepage
 if (is_logged_in()) {
     redirect('index.php');
 }
@@ -14,30 +12,34 @@ $errors = [];
 $email = '';
 $success_message = '';
 
-// Check for success message from registration
+
 if (isset($_SESSION['success_message'])) {
     $success_message = $_SESSION['success_message'];
     unset($_SESSION['success_message']);
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    
     if (empty($email)) {
         $errors[] = 'Email is required.';
     }
-
     if (empty($password)) {
         $errors[] = 'Password is required.';
     }
 
     if (empty($errors)) {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+        
+        $c_email = mysqli_real_escape_string($conn, $email);
 
+    
+        $query = "SELECT * FROM users WHERE email = '$c_email'";
+        $result = mysqli_query($conn, $query);
+        $user = mysqli_fetch_assoc($result);
+
+        
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -93,6 +95,7 @@ require_once 'includes/header.php';
 </div>
 
 <script>
+
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     var email = document.getElementById('email').value.trim();
     var password = document.getElementById('password').value;
