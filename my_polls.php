@@ -96,15 +96,21 @@ require_once 'includes/header.php';
 
 <script>
 
-function copyLink(pollId) {
-    var link = 'http://localhost/Voting-System/poll.php?id=' + pollId;
-    var temp = document.createElement('input');
-    document.body.appendChild(temp);
-    temp.value = link;
-    temp.select();
-    document.execCommand('copy');
-    document.body.removeChild(temp);
-    alert('Poll link copied!');
+async function copyLink(pollId) {
+    const link = window.location.origin + '/Voting-System/poll.php?id=' + pollId;
+
+    try {
+        await navigator.clipboard.writeText(link);
+        alert('Poll link copied!');
+    } catch (error) {
+        const temp = document.createElement('input');
+        temp.value = link;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        alert('Poll link copied!');
+    }
 }
 </script>
 
