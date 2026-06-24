@@ -32,7 +32,7 @@ if (!$poll || $poll['creator_id'] != $c_user_id) {
     redirect('my_polls.php');
 }
 
-// 3. Poll එක මකාදැමීම (Delete)
+// delete the poll and its associated votes
 $delete_query = "DELETE FROM polls WHERE id = '$c_poll_id'";
 mysqli_query($conn, $delete_query);
 

@@ -5,7 +5,7 @@ require_once 'includes/functions.php';
 
 
 
-// Form එකකින් POST ක්‍රමයට ආවේ නැත්නම් ආපහු හරවා යවන්න
+// check if user is logged in for account-only polls
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('index.php');
 }
@@ -16,7 +16,7 @@ if ($poll_id <= 0) {
     redirect('index.php');
 }
 
-// 1. ආරක්ෂිතව දත්ත සකසා ගැනීම සහ Poll එකේ තොරතුරු ලබා ගැනීම
+// get poll details
 $c_poll_id = mysqli_real_escape_string($conn, $poll_id);
 $query = "SELECT * FROM polls WHERE id = '$c_poll_id'";
 $result = mysqli_query($conn, $query);
@@ -28,33 +28,33 @@ if (!$poll) {
 
 $user_id = get_current_user_id();
 
-// ගිණුමක් අවශ්‍ය නම් (Account required) පරිශීලකයා ලොග් වී ඇත්දැයි බැලීම
+// check if poll is account-only and user is not logged in, redirect to login page
 if ($poll['access_type'] === 'account' && !is_logged_in()) {
     redirect('login.php');
 }
 
-// පරිශීලකයා දැනටමත් ඡන්දය ප්‍රකාශ කර ඇත්දැයි බැලීම (අලුත් $conn එක සමඟ)
+// check if user has already voted on this poll
 if ($user_id !== null && has_user_voted($conn, $poll_id, $user_id)) {
     $_SESSION['vote_success'] = 'You have already voted on this poll.';
     redirect('poll.php?id=' . $poll_id);
 }
 
-// ඡන්ද සීමාව ඉක්මවා ඇත්දැයි බැලීම
+// check if poll has reached its vote limit
 $vote_count = get_vote_count($conn, $poll_id);
 if ($poll['vote_limit'] !== null && $vote_count >= $poll['vote_limit']) {
     $_SESSION['vote_success'] = 'This poll has reached its maximum number of responses.';
     redirect('poll.php?id=' . $poll_id);
 }
 
-// 2. ප්‍රධාන ඡන්ද වාර්තාව ඇතුළත් කිරීම (Insert vote record)
+// safe user_id for insertion (handle null case)
 $c_user_id = $user_id !== null ? (int)$user_id : "NULL";
 $insert_vote = "INSERT INTO votes (poll_id, user_id) VALUES ('$c_poll_id', " . ($user_id !== null ? "'$c_user_id'" : "NULL") . ")";
 mysqli_query($conn, $insert_query ?? $insert_vote);
 
-// අලුතින්ම ඇතුළත් වූ Vote ID එක ලබා ගැනීම (lastInsertId වෙනුවට සරල ක්‍රමය)
+// get the ID of the newly inserted vote record
 $vote_id = mysqli_insert_id($conn);
 
-// 3. ඡන්දයේ වර්ගය අනුව පිළිතුරු ඇතුළත් කිරීම (Insert vote answers)
+
 if ($poll['poll_type'] === 'single') {
     $option_id = isset($_POST['option_id']) ? (int) $_POST['option_id'] : 0;
     if ($option_id > 0) {

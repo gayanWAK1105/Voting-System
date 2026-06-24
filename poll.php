@@ -3,22 +3,20 @@ require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
-// (Session එක auth.php මඟින් දැනටමත් ආරම්භ කර ඇත)
 
-// Poll ID එක ලබා ගැනීම
+// get poll ID from POST data
 $poll_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($poll_id <= 0) {
     redirect('index.php');
 }
 
-// 1. ආරක්ෂිතව Poll එකක දත්ත ලබා ගැනීම සඳහා සරල Query එකක් ලිවීම
 $c_poll_id = mysqli_real_escape_string($conn, $poll_id);
 $query = "SELECT * FROM polls WHERE id = '$c_poll_id'";
 $result = mysqli_query($conn, $query);
 $poll = mysqli_fetch_assoc($result);
 
-// Poll එකක් හමුනොවුණහොත් දෝෂ පණිවිඩය
+// error handling - poll not found
 if (!$poll) {
     $page_title = 'Poll Not Found';
     $page_css = 'poll.css';
@@ -29,11 +27,11 @@ if (!$poll) {
     exit;
 }
 
-// 2. Views ගණන 1කින් වැඩි කිරීම (Increment view count)
+// increment total views for the poll
 $update_views = "UPDATE polls SET total_views = total_views + 1 WHERE id = '$c_poll_id'";
 mysqli_query($conn, $update_views);
 
-// ඇතුළුවීමේ අවසරය පරීක්ෂා කිරීම: ගිණුමක් අවශ්‍ය නම් (Account required)
+// check if poll is account-only and user is not logged in, redirect to login page
 if ($poll['access_type'] === 'account' && !is_logged_in()) {
     $page_title = 'Login Required';
     $page_css = 'poll.css';
@@ -47,10 +45,10 @@ if ($poll['access_type'] === 'account' && !is_logged_in()) {
     exit;
 }
 
-// ඇතුළුවීමේ අවසරය පරීක්ෂා කිරීම: රහස් කේතයක් අවශ්‍ය නම් (Code protected)
+
 $code_verified = false;
 if ($poll['access_type'] === 'code') {
-    // රහස් කේතය Submit කර ඇත්නම් පරීක්ෂා කිරීම
+    
     if (isset($_POST['access_code_submit'])) {
         $entered_code = trim($_POST['entered_code'] ?? '');
         if ($entered_code === $poll['access_code']) {
@@ -61,7 +59,6 @@ if ($poll['access_type'] === 'code') {
         }
     }
 
-    // Session එකේ දැනටමත් තහවුරු කර ඇත්නම්
     if (isset($_SESSION['poll_code_' . $poll_id])) {
         $code_verified = true;
     }
@@ -101,13 +98,13 @@ $options = get_poll_options($conn, $poll_id);
 $user_id = get_current_user_id();
 $user_voted = has_user_voted($conn, $poll_id, $user_id);
 
-// ඡන්ද සීමාව පරීක්ෂා කිරීම (Vote limit)
+// check if poll has reached its vote limit
 $vote_limit_reached = false;
 if ($poll['vote_limit'] !== null && $vote_count >= $poll['vote_limit']) {
     $vote_limit_reached = true;
 }
 
-// ප්‍රතිඵල පෙන්විය යුතුදැයි තීරණය කිරීම
+// check if results should be shown based on poll settings and whether user has voted
 $show_results = false;
 if ($poll['results_visibility'] === 'immediate') {
     $show_results = true;
@@ -115,10 +112,10 @@ if ($poll['results_visibility'] === 'immediate') {
     $show_results = true;
 }
 
-// දැනට සිටින පරිශීලකයා මෙය සෑදූ කෙනාදැයි පරීක්ෂා කිරීම
+// check if current user is the creator of the poll
 $is_creator = ($user_id !== null && $user_id == $poll['creator_id']);
 
-// ඡන්දය ප්‍රකාශ කළ පසු ලැබෙන සාර්ථක පණිවිඩය
+// message for successful vote
 $vote_success = '';
 if (isset($_SESSION['vote_success'])) {
     $vote_success = $_SESSION['vote_success'];
@@ -270,7 +267,7 @@ require_once 'includes/header.php';
 </div>
 
 <script>
-// ලින්ක් එක කොපි කරගන්නා සරල JavaScript කේතය
+// copy share link to clipboard
 function copyShareLink() {
     var input = document.getElementById('shareLink');
     input.select();
