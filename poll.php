@@ -3,20 +3,22 @@ require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
-start_session_if_needed();
+// (Session එක auth.php මඟින් දැනටමත් ආරම්භ කර ඇත)
 
-// Get poll ID
+// Poll ID එක ලබා ගැනීම
 $poll_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($poll_id <= 0) {
     redirect('index.php');
 }
 
-// Fetch poll
-$stmt = $pdo->prepare("SELECT * FROM polls WHERE id = ?");
-$stmt->execute([$poll_id]);
-$poll = $stmt->fetch();
+// 1. ආරක්ෂිතව Poll එකක දත්ත ලබා ගැනීම සඳහා සරල Query එකක් ලිවීම
+$c_poll_id = mysqli_real_escape_string($conn, $poll_id);
+$query = "SELECT * FROM polls WHERE id = '$c_poll_id'";
+$result = mysqli_query($conn, $query);
+$poll = mysqli_fetch_assoc($result);
 
+// Poll එකක් හමුනොවුණහොත් දෝෂ පණිවිඩය
 if (!$poll) {
     $page_title = 'Poll Not Found';
     $page_css = 'poll.css';
@@ -27,11 +29,11 @@ if (!$poll) {
     exit;
 }
 
-// Increment view count
-$stmt = $pdo->prepare("UPDATE polls SET total_views = total_views + 1 WHERE id = ?");
-$stmt->execute([$poll_id]);
+// 2. Views ගණන 1කින් වැඩි කිරීම (Increment view count)
+$update_views = "UPDATE polls SET total_views = total_views + 1 WHERE id = '$c_poll_id'";
+mysqli_query($conn, $update_views);
 
-// Check access: account required
+// ඇතුළුවීමේ අවසරය පරීක්ෂා කිරීම: ගිණුමක් අවශ්‍ය නම් (Account required)
 if ($poll['access_type'] === 'account' && !is_logged_in()) {
     $page_title = 'Login Required';
     $page_css = 'poll.css';
@@ -45,10 +47,10 @@ if ($poll['access_type'] === 'account' && !is_logged_in()) {
     exit;
 }
 
-// Check access: code protected
+// ඇතුළුවීමේ අවසරය පරීක්ෂා කිරීම: රහස් කේතයක් අවශ්‍ය නම් (Code protected)
 $code_verified = false;
 if ($poll['access_type'] === 'code') {
-    // Check if code was submitted
+    // රහස් කේතය Submit කර ඇත්නම් පරීක්ෂා කිරීම
     if (isset($_POST['access_code_submit'])) {
         $entered_code = trim($_POST['entered_code'] ?? '');
         if ($entered_code === $poll['access_code']) {
@@ -59,7 +61,7 @@ if ($poll['access_type'] === 'code') {
         }
     }
 
-    // Check if already verified in session
+    // Session එකේ දැනටමත් තහවුරු කර ඇත්නම්
     if (isset($_SESSION['poll_code_' . $poll_id])) {
         $code_verified = true;
     }
@@ -92,20 +94,20 @@ if ($poll['access_type'] === 'code') {
     }
 }
 
-// Get poll data
-$creator_name = get_poll_creator($pdo, $poll['creator_id']);
-$vote_count = get_vote_count($pdo, $poll_id);
-$options = get_poll_options($pdo, $poll_id);
-$user_id = get_current_user_id();
-$user_voted = has_user_voted($pdo, $poll_id, $user_id);
 
-// Check vote limit
+$creator_name = get_poll_creator($conn, $poll_id);
+$vote_count = get_vote_count($conn, $poll_id);
+$options = get_poll_options($conn, $poll_id);
+$user_id = get_current_user_id();
+$user_voted = has_user_voted($conn, $poll_id, $user_id);
+
+// ඡන්ද සීමාව පරීක්ෂා කිරීම (Vote limit)
 $vote_limit_reached = false;
 if ($poll['vote_limit'] !== null && $vote_count >= $poll['vote_limit']) {
     $vote_limit_reached = true;
 }
 
-// Determine if results should be shown
+// ප්‍රතිඵල පෙන්විය යුතුදැයි තීරණය කිරීම
 $show_results = false;
 if ($poll['results_visibility'] === 'immediate') {
     $show_results = true;
@@ -113,10 +115,10 @@ if ($poll['results_visibility'] === 'immediate') {
     $show_results = true;
 }
 
-// Check if current user is the poll creator
+// දැනට සිටින පරිශීලකයා මෙය සෑදූ කෙනාදැයි පරීක්ෂා කිරීම
 $is_creator = ($user_id !== null && $user_id == $poll['creator_id']);
 
-// Success message from voting
+// ඡන්දය ප්‍රකාශ කළ පසු ලැබෙන සාර්ථක පණිවිඩය
 $vote_success = '';
 if (isset($_SESSION['vote_success'])) {
     $vote_success = $_SESSION['vote_success'];
@@ -134,7 +136,6 @@ require_once 'includes/header.php';
     <div class="alert alert-success"><p><?php echo sanitize($vote_success); ?></p></div>
     <?php endif; ?>
 
-    <!-- Poll Header -->
     <div class="card poll-header-card">
         <div class="poll-meta">
             <span class="badge badge-<?php echo $poll['poll_type']; ?>">
@@ -163,19 +164,17 @@ require_once 'includes/header.php';
 
         <div class="poll-stats-bar">
             <span><?php echo $vote_count; ?> vote<?php echo $vote_count !== 1 ? 's' : ''; ?></span>
-            <span><?php echo $poll['total_views']; ?> view<?php echo $poll['total_views'] !== 1 ? 's' : ''; ?></span>
+            <span><?php echo $poll['total_views'] + 1; ?> view<?php echo ($poll['total_views'] + 1) !== 1 ? 's' : ''; ?></span>
             <?php if ($poll['vote_limit']): ?>
             <span>Limit: <?php echo $poll['vote_limit']; ?></span>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Vote Limit Reached -->
     <?php if ($vote_limit_reached): ?>
     <div class="alert alert-error"><p>This poll has reached its maximum number of responses.</p></div>
     <?php endif; ?>
 
-    <!-- Voting Form (show if user hasn't voted and limit not reached) -->
     <?php if (!$user_voted && !$vote_limit_reached): ?>
     <div class="card">
         <h2>Cast Your Vote</h2>
@@ -219,14 +218,12 @@ require_once 'includes/header.php';
     <div class="alert alert-info"><p>You have already voted on this poll.</p></div>
     <?php endif; ?>
 
-    <!-- Results Section -->
     <?php if ($show_results): ?>
     <div class="card">
         <h2>Results</h2>
 
         <?php if ($poll['poll_type'] === 'text'): ?>
-            <!-- Text responses -->
-            <?php $text_answers = get_text_answers($pdo, $poll_id); ?>
+            <?php $text_answers = get_text_answers($conn, $poll_id); ?>
             <?php if (empty($text_answers)): ?>
             <p class="text-muted">No responses yet.</p>
             <?php else: ?>
@@ -239,10 +236,9 @@ require_once 'includes/header.php';
             <?php endif; ?>
 
         <?php else: ?>
-            <!-- Single/Multiple choice results -->
             <?php foreach ($options as $option): ?>
                 <?php
-                $opt_votes = get_option_vote_count($pdo, $option['id']);
+                $opt_votes = get_option_vote_count($conn, $option['id']);
                 $percentage = ($vote_count > 0) ? round(($opt_votes / $vote_count) * 100) : 0;
                 ?>
                 <div class="result-row">
@@ -263,7 +259,6 @@ require_once 'includes/header.php';
     </div>
     <?php endif; ?>
 
-    <!-- Share Link -->
     <div class="card">
         <h3>Share This Poll</h3>
         <div class="share-link-box">
@@ -275,6 +270,7 @@ require_once 'includes/header.php';
 </div>
 
 <script>
+// ලින්ක් එක කොපි කරගන්නා සරල JavaScript කේතය
 function copyShareLink() {
     var input = document.getElementById('shareLink');
     input.select();
@@ -282,7 +278,7 @@ function copyShareLink() {
     alert('Link copied!');
 }
 
-// Validate vote form
+
 var voteForm = document.getElementById('voteForm');
 if (voteForm) {
     voteForm.addEventListener('submit', function(e) {

@@ -16,7 +16,7 @@ $anonymous_mode = 0;
 $results_visibility = 'immediate';
 $vote_limit = '';
 
-// Handle form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vote_limit = ($vote_limit_input !== '' && is_numeric($vote_limit_input)) ? (int) $vote_limit_input : null;
     $options = isset($_POST['options']) ? $_POST['options'] : [];
 
-    // Validate
+    
     if (empty($title)) {
         $errors[] = 'Poll title is required.';
     } elseif (strlen($title) > 255) {
@@ -49,9 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Access code is required for code-protected polls.';
     }
 
-    // For single/multiple polls, we need at least 2 options
+    
     if ($poll_type !== 'text') {
-        // Clean empty options
         $clean_options = [];
         foreach ($options as $opt) {
             $opt = trim($opt);
@@ -64,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Handle image upload
+    
     $image_path = null;
     if (isset($_FILES['poll_image']) && $_FILES['poll_image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['poll_image'];
@@ -92,37 +91,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Insert poll
+    
     if (empty($errors)) {
-        $stmt = $pdo->prepare("
-            INSERT INTO polls (creator_id, title, description, image_path, poll_type, access_type, access_code, show_in_feed, anonymous_mode, results_visibility, vote_limit)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            get_current_user_id(),
-            $title,
-            $description,
-            $image_path,
-            $poll_type,
-            $access_type,
-            ($access_type === 'code') ? $access_code : null,
-            $show_in_feed,
-            $anonymous_mode,
-            $results_visibility,
-            $vote_limit
-        ]);
+        $c_user_id = mysqli_real_escape_string($conn, get_current_user_id());
+        $c_title = mysqli_real_escape_string($conn, $title);
+        $c_description = mysqli_real_escape_string($conn, $description);
+        $c_image_path = $image_path ? "'" . mysqli_real_escape_string($conn, $image_path) . "'" : "NULL";
+        $c_poll_type = mysqli_real_escape_string($conn, $poll_type);
+        $c_access_type = mysqli_real_escape_string($conn, $access_type);
+        $c_access_code = ($access_type === 'code') ? "'" . mysqli_real_escape_string($conn, $access_code) . "'" : "NULL";
+        $c_show_in_feed = (int)$show_in_feed;
+        $c_anonymous_mode = (int)$anonymous_mode;
+        $c_results_visibility = mysqli_real_escape_string($conn, $results_visibility);
+        $c_vote_limit = $vote_limit !== null ? (int)$vote_limit : "NULL";
 
-        $poll_id = $pdo->lastInsertId();
+        
+        $query = "INSERT INTO polls (creator_id, title, description, image_path, poll_type, access_type, access_code, show_in_feed, anonymous_mode, results_visibility, vote_limit)
+                  VALUES ('$c_user_id', '$c_title', '$c_description', $c_image_path, '$c_poll_type', '$c_access_type', $c_access_code, '$c_show_in_feed', '$c_anonymous_mode', '$c_results_visibility', $c_vote_limit)";
+        
+        if (mysqli_query($conn, $query)) {
+            $poll_id = mysqli_insert_id($conn);
 
-        // Insert options (for single/multiple polls)
-        if ($poll_type !== 'text') {
-            $opt_stmt = $pdo->prepare("INSERT INTO poll_options (poll_id, option_text) VALUES (?, ?)");
-            foreach ($clean_options as $option_text) {
-                $opt_stmt->execute([$poll_id, $option_text]);
+            
+            if ($poll_type !== 'text') {
+                foreach ($clean_options as $option_text) {
+                    $c_option_text = mysqli_real_escape_string($conn, $option_text);
+                    $opt_query = "INSERT INTO poll_options (poll_id, option_text) VALUES ('$poll_id', '$c_option_text')";
+                    mysqli_query($conn, $opt_query);
+                }
             }
-        }
 
-        redirect('poll.php?id=' . $poll_id);
+            redirect('poll.php?id=' . $poll_id);
+        } else {
+            $errors[] = 'Database error: Failed to create poll.';
+        }
     }
 }
 
@@ -146,26 +148,22 @@ require_once 'includes/header.php';
 
         <form method="POST" action="create_poll.php" enctype="multipart/form-data" id="createPollForm">
 
-            <!-- Title -->
             <div class="form-group">
                 <label for="title">Poll Title</label>
                 <input type="text" id="title" name="title" value="<?php echo sanitize($title); ?>" required>
             </div>
 
-            <!-- Description -->
             <div class="form-group">
                 <label for="description">Description (optional)</label>
                 <textarea id="description" name="description"><?php echo sanitize($description); ?></textarea>
             </div>
 
-            <!-- Image -->
             <div class="form-group">
                 <label for="poll_image">Poll Image (optional)</label>
                 <input type="file" id="poll_image" name="poll_image" accept="image/jpeg,image/png,image/gif">
                 <span class="help-text">Max 2MB. JPG, PNG, or GIF.</span>
             </div>
 
-            <!-- Poll Type -->
             <div class="form-group">
                 <label for="poll_type">Poll Type</label>
                 <select id="poll_type" name="poll_type">
@@ -175,7 +173,6 @@ require_once 'includes/header.php';
                 </select>
             </div>
 
-            <!-- Poll Options (hidden for text type) -->
             <div id="optionsSection">
                 <div class="form-group">
                     <label>Poll Options</label>
@@ -202,7 +199,6 @@ require_once 'includes/header.php';
                 </div>
             </div>
 
-            <!-- Access Type -->
             <div class="form-group">
                 <label for="access_type">Access Type</label>
                 <select id="access_type" name="access_type">
@@ -212,25 +208,21 @@ require_once 'includes/header.php';
                 </select>
             </div>
 
-            <!-- Access Code (shown only when code selected) -->
             <div class="form-group" id="accessCodeGroup" style="display:none;">
                 <label for="access_code">Access Code</label>
                 <input type="text" id="access_code" name="access_code" value="<?php echo sanitize($access_code); ?>" placeholder="e.g. TECH2026">
             </div>
 
-            <!-- Show in Feed -->
             <div class="form-check">
                 <input type="checkbox" id="show_in_feed" name="show_in_feed" <?php if ($show_in_feed) echo 'checked'; ?>>
                 <label for="show_in_feed">Show in Community Feed</label>
             </div>
 
-            <!-- Anonymous Mode -->
             <div class="form-check">
                 <input type="checkbox" id="anonymous_mode" name="anonymous_mode" <?php if ($anonymous_mode) echo 'checked'; ?>>
                 <label for="anonymous_mode">Anonymous Voting</label>
             </div>
 
-            <!-- Results Visibility -->
             <div class="form-group">
                 <label for="results_visibility">Results Visibility</label>
                 <select id="results_visibility" name="results_visibility">
@@ -239,7 +231,6 @@ require_once 'includes/header.php';
                 </select>
             </div>
 
-            <!-- Vote Limit -->
             <div class="form-group">
                 <label for="vote_limit">Vote Limit (optional)</label>
                 <input type="number" id="vote_limit" name="vote_limit" min="1" value="<?php echo sanitize($vote_limit); ?>" placeholder="Leave empty for unlimited">
@@ -252,7 +243,6 @@ require_once 'includes/header.php';
 </div>
 
 <script>
-// Show/hide options section based on poll type
 var pollTypeSelect = document.getElementById('poll_type');
 var optionsSection = document.getElementById('optionsSection');
 
@@ -264,12 +254,10 @@ pollTypeSelect.addEventListener('change', function() {
     }
 });
 
-// Initial check
 if (pollTypeSelect.value === 'text') {
     optionsSection.style.display = 'none';
 }
 
-// Show/hide access code based on access type
 var accessTypeSelect = document.getElementById('access_type');
 var accessCodeGroup = document.getElementById('accessCodeGroup');
 
@@ -281,12 +269,10 @@ accessTypeSelect.addEventListener('change', function() {
     }
 });
 
-// Initial check
 if (accessTypeSelect.value === 'code') {
     accessCodeGroup.style.display = 'block';
 }
 
-// Add option field
 var optionCount = document.querySelectorAll('#optionsContainer .option-row').length;
 
 function addOption() {
@@ -299,13 +285,11 @@ function addOption() {
     container.appendChild(div);
 }
 
-// Remove option field
 function removeOption(btn) {
     var row = btn.parentElement;
     row.parentElement.removeChild(row);
 }
 
-// Form validation
 document.getElementById('createPollForm').addEventListener('submit', function(e) {
     var title = document.getElementById('title').value.trim();
     var pollType = document.getElementById('poll_type').value;

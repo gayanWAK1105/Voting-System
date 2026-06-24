@@ -3,9 +3,9 @@ require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require_once 'includes/functions.php';
 
-start_session_if_needed();
 
-// If already logged in, go to homepage
+
+// if user is already logged in, redirect to index.php
 if (is_logged_in()) {
     redirect('index.php');
 }
@@ -14,14 +14,14 @@ $errors = [];
 $username = '';
 $email = '';
 
-// Handle form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // Validate
+    // Validation
     if (empty($username)) {
         $errors[] = 'Username is required.';
     } elseif (strlen($username) < 3 || strlen($username) > 50) {
@@ -44,26 +44,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Passwords do not match.';
     }
 
-    // Check for duplicate username or email
+    
     if (empty($errors)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        if ($stmt->fetchColumn() > 0) {
+        // protect against SQL injection
+        $c_username = mysqli_real_escape_string($conn, $username);
+        $c_email = mysqli_real_escape_string($conn, $email);
+
+        // check username availability
+        $query_user = "SELECT id FROM users WHERE username = '$c_username'";
+        $result_user = mysqli_query($conn, $query_user);
+        if (mysqli_num_rows($result_user) > 0) {
             $errors[] = 'Username is already taken.';
         }
 
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetchColumn() > 0) {
+        // check whether Email is already registered
+        $query_email = "SELECT id FROM users WHERE email = '$c_email'";
+        $result_email = mysqli_query($conn, $query_email);
+        if (mysqli_num_rows($result_email) > 0) {
             $errors[] = 'Email is already registered.';
         }
     }
 
-    // Insert user
+    // if there are no errors, insert the new user into the database
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-        $stmt->execute([$username, $email, $hashed_password]);
+        
+        $insert_query = "INSERT INTO users (username, email, password) VALUES ('$c_username', '$c_email', '$hashed_password')";
+        mysqli_query($conn, $insert_query);
 
         $_SESSION['success_message'] = 'Account created successfully. Please login.';
         redirect('login.php');
@@ -120,6 +127,7 @@ require_once 'includes/header.php';
 </div>
 
 <script>
+// JavaScript validation for the registration form
 document.getElementById('registerForm').addEventListener('submit', function(e) {
     var username = document.getElementById('username').value.trim();
     var email = document.getElementById('email').value.trim();
