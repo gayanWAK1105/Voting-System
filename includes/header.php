@@ -12,7 +12,7 @@ require_once __DIR__ . '/auth.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title><?php echo isset($page_title) ? sanitize($page_title) . ' - ' : ''; ?>VoteHub</title>
+    <title><?php echo isset($page_title) ? sanitize($page_title) . ' - ' : ''; ?>Votify</title>
     
     <link rel="stylesheet" href="/Voting-System/assets/css/global.css">
     
@@ -25,7 +25,9 @@ require_once __DIR__ . '/auth.php';
 <header>
     <div class="header-container">
         <div class="logo">
-            <a href="/Voting-System/index.php">VoteHub</a>
+            <a href="/Voting-System/index.php">
+                <img src="/Voting-System/assets/images/logo-nobg.png" alt="Votify" class="logo-img">
+            </a>
         </div>
         <nav>
             <ul>

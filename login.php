@@ -58,7 +58,7 @@ require_once 'includes/header.php';
 <div class="auth-container">
     <div class="auth-box card">
         <h1>Login</h1>
-        <p class="text-muted">Sign in to your VoteHub account.</p>
+        <p class="text-muted">Sign in to your Votify account.</p>
 
         <?php if (!empty($success_message)): ?>
         <div class="alert alert-success">

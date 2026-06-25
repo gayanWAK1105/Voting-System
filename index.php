@@ -34,7 +34,7 @@ require_once 'includes/header.php';
 ?>
 
 <section class="hero">
-    <h1>Welcome to VoteHub</h1>
+    <h1>Welcome to Votify</h1>
     <p>Create polls, share them with the community, and make your voice heard.</p>
     <?php if (is_logged_in()): ?>
         <a href="create_poll.php" class="btn btn-primary">Create a Poll</a>

@@ -91,7 +91,7 @@ require_once 'includes/header.php';
 <div class="auth-container">
     <div class="auth-box card">
         <h1>Create Account</h1>
-        <p class="text-muted">Join VoteHub to create and vote on polls.</p>
+        <p class="text-muted">Join Votify to create and vote on polls.</p>
 
         <?php if (!empty($errors)): ?>
             <div class="alert alert-error">
